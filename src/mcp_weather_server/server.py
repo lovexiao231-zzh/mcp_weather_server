@@ -278,7 +278,7 @@ async def main():
     parser.add_argument('--host', default='0.0.0.0',
                         help='Host to bind to (HTTP modes only, default: 0.0.0.0)')
     parser.add_argument('--port', type=int, default=None,
-                        help='Port to listen on (HTTP modes only, default: from PORT env var or 8080)')
+                        help='Port to listen on (HTTP modes only, default: from PORT env var or 8085)')
     parser.add_argument('--stateless', action='store_true',
                         help='Run in stateless mode (streamable-http only, creates fresh transport per request)')
     parser.add_argument('--debug', action='store_true',
@@ -286,10 +286,10 @@ async def main():
 
     args = parser.parse_args()
 
-    # Get port from environment variable (Smithery sets this to 8081)
-    # or use command line argument, or default to 8080
+    # Get port from environment variable (Smithery sets this to 8085)
+    # or use command line argument, or default to 8085
     import os
-    port = args.port if args.port is not None else int(os.environ.get("PORT", 8080))
+    port = args.port if args.port is not None else int(os.environ.get("PORT", 8085))
 
     try:
         # Register all tools
@@ -307,7 +307,7 @@ async def main():
         raise
 
 
-async def run_server(mode: str, host: str = "0.0.0.0", port: int = 8080, debug: bool = False, stateless: bool = False):
+async def run_server(mode: str, host: str = "0.0.0.0", port: int = 8085, debug: bool = False, stateless: bool = False):
     """
     Unified server runner that supports stdio, SSE, and streamable-http modes.
 

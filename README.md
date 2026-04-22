@@ -124,7 +124,7 @@ python -m mcp_weather_server.server --mode stdio
 The SSE mode runs an HTTP server that provides MCP functionality via Server-Sent Events, making it accessible to web applications.
 
 ```bash
-# Start SSE server on default host/port (0.0.0.0:8080)
+# Start SSE server on default host/port (0.0.0.0:8085)
 python -m mcp_weather_server --mode sse
 
 # Specify custom host and port
@@ -142,7 +142,7 @@ python -m mcp_weather_server --mode sse --debug
 The streamable-http mode implements the new MCP Streamable HTTP protocol with a single `/mcp` endpoint. This mode supports both stateful (default) and stateless operations.
 
 ```bash
-# Start streamable HTTP server on default host/port (0.0.0.0:8080)
+# Start streamable HTTP server on default host/port (0.0.0.0:8085)
 python -m mcp_weather_server --mode streamable-http
 
 # Specify custom host and port
@@ -168,7 +168,7 @@ python -m mcp_weather_server --mode streamable-http --debug
 ```
 --mode {stdio,sse,streamable-http}  Server mode: stdio (default), sse, or streamable-http
 --host HOST                          Host to bind to (HTTP modes only, default: 0.0.0.0)
---port PORT                          Port to listen on (HTTP modes only, default: 8080)
+--port PORT                          Port to listen on (HTTP modes only, default:8085)
 --stateless                          Run in stateless mode (streamable-http only)
 --debug                              Enable debug mode
 ```
@@ -176,10 +176,10 @@ python -m mcp_weather_server --mode streamable-http --debug
 **Example SSE Usage:**
 ```javascript
 // Connect to SSE endpoint
-const eventSource = new EventSource('http://localhost:8080/sse');
+const eventSource = new EventSource('http://localhost:8085/sse');
 
 // Send MCP tool request
-fetch('http://localhost:8080/messages/', {
+fetch('http://localhost:8085/messages/', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -194,7 +194,7 @@ fetch('http://localhost:8080/messages/', {
 ```javascript
 // Initialize session and call tool using Streamable HTTP protocol
 async function callWeatherTool() {
-  const response = await fetch('http://localhost:8080/mcp', {
+  const response = await fetch('http://localhost:8085/mcp', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -469,7 +469,7 @@ When running in SSE mode, you can integrate the weather server with web applicat
     <div id="weather-data"></div>
     <script>
         // Connect to SSE endpoint
-        const eventSource = new EventSource('http://localhost:8080/sse');
+        const eventSource = new EventSource('http://localhost:8085/sse');
 
         eventSource.onmessage = function(event) {
             const data = JSON.parse(event.data);
@@ -478,7 +478,7 @@ When running in SSE mode, you can integrate the weather server with web applicat
 
         // Function to get weather
         async function getWeather(city) {
-            const response = await fetch('http://localhost:8080/messages/', {
+            const response = await fetch('http://localhost:8085/messages/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -498,7 +498,7 @@ When running in SSE mode, you can integrate the weather server with web applicat
 
         // Example: Get air quality
         async function getAirQuality(city) {
-            const response = await fetch('http://localhost:8080/messages/', {
+            const response = await fetch('http://localhost:8085/messages/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -534,15 +534,15 @@ docker pull dog830228/mcp_weather_server:latest
 # Run in stdio mode (default)
 docker run dog830228/mcp_weather_server:latest
 
-# Run in SSE mode on port 8080
-docker run -p 8080:8080 dog830228/mcp_weather_server:latest --mode sse
+# Run in SSE mode on port 8085
+docker run -p 8085:8085 dog830228/mcp_weather_server:latest --mode sse
 
-# Run in streamable-http mode on port 8080
-docker run -p 8080:8080 dog830228/mcp_weather_server:latest --mode streamable-http
+# Run in streamable-http mode on port 8085
+docker run -p 8085:8085 dog830228/mcp_weather_server:latest --mode streamable-http
 
 # Pull a specific version
 docker pull dog830228/mcp_weather_server:0.5.0
-docker run -p 8080:8080 dog830228/mcp_weather_server:0.5.0 --mode sse
+docker run -p 8085:8085 dog830228/mcp_weather_server:0.5.0 --mode sse
 ```
 
 ### Available Docker Images
@@ -561,11 +561,11 @@ If you want to build the Docker image yourself:
 # Build
 docker build -t mcp-weather-server:sse .
 
-# Run (port will be read from PORT env var, defaults to 8081)
-docker run -p 8081:8081 mcp-weather-server:sse
+# Run (port will be read from PORT env var, defaults to 8085)
+docker run -p 8085:8085 mcp-weather-server:sse
 
 # Run with custom port
-docker run -p 8080:8080 mcp-weather-server:local --mode sse
+docker run -p 8085:8085 mcp-weather-server:local --mode sse
 ```
 
 #### Streamable HTTP Build
@@ -574,10 +574,10 @@ docker run -p 8080:8080 mcp-weather-server:local --mode sse
 docker build -f Dockerfile.streamable-http -t mcp-weather-server:streamable-http .
 
 # Run in stateful mode
-docker run -p 8080:8080 mcp-weather-server:streamable-http
+docker run -p 8085:8085 mcp-weather-server:streamable-http
 
 # Run in stateless mode
-docker run -p 8080:8080 -e STATELESS=true mcp-weather-server:streamable-http
+docker run -p 8085:8085 -e STATELESS=true mcp-weather-server:streamable-http
 ```
 
 ## Development
@@ -623,7 +623,7 @@ python -m mcp_weather_server
 #### SSE Server Mode
 ```bash
 # From project root
-python -m mcp_weather_server --mode sse --host 0.0.0.0 --port 8080
+python -m mcp_weather_server --mode sse --host 0.0.0.0 --port 8085
 
 # With custom host/port
 python -m mcp_weather_server --mode sse --host localhost --port 3000
@@ -632,7 +632,7 @@ python -m mcp_weather_server --mode sse --host localhost --port 3000
 #### Streamable HTTP Mode
 ```bash
 # Stateful mode (default)
-python -m mcp_weather_server --mode streamable-http --host 0.0.0.0 --port 8080
+python -m mcp_weather_server --mode streamable-http --host 0.0.0.0 --port 8085
 
 # With debug logging
 python -m mcp_weather_server --mode streamable-http --debug
@@ -697,8 +697,8 @@ This server uses free and open-source APIs:
 - Check firewall settings for the specified port
 - Ensure all dependencies are installed: `pip install starlette uvicorn`
 - Verify the correct endpoint:
-  - SSE: `http://localhost:8080/sse` and `http://localhost:8080/messages/`
-  - Streamable HTTP: `http://localhost:8080/mcp`
+  - SSE: `http://localhost:8085/sse` and `http://localhost:8085/messages/`
+  - Streamable HTTP: `http://localhost:8085/mcp`
 
 **3. MCP Client connection issues**
 - Verify Python path in MCP client configuration

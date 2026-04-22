@@ -1,0 +1,110 @@
+// Jenkinsfile for MCP Weather Server CI/CD
+// 触发 GitHub webhook 后自动构建和部署
+
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = 'lovexiao2311/mcp_weather_server'
+        DEPLOY_HOST = '114.215.178.73'
+        DEPLOY_USER = 'root'
+        DEPLOY_DIR = '/opt/mcp-weather-server'
+    }
+
+    tools {
+        jdk 'jdk17'  // 根据需要选择 JDK 版本
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+                script {
+                    // 从 pyproject.toml 提取版本号
+                    env.APP_VERSION = sh(
+                        script: "grep -oP '(?<=version = \").*(?=\")' pyproject.toml",
+                        returnStdout: true
+                    ).trim()
+                    echo "应用版本：${env.APP_VERSION}"
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    docker.build("${DOCKER_IMAGE}:${env.APP_VERSION}", "-f Dockerfile .")
+                    docker.build("${DOCKER_IMAGE}:latest", "-f Dockerfile .")
+                }
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'docker-hub-credential',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                        echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin
+                        docker push ${DOCKER_IMAGE}:${APP_VERSION}
+                        docker push ${DOCKER_IMAGE}:latest
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to Aliyun') {
+            steps {
+                withCredentials([file(
+                    credentialsId: 'aliyun-ssh-key',
+                    variable: 'SSH_KEY'
+                )]) {
+                    sh '''
+                        # 复制部署脚本到远程服务器
+                        ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ${DEPLOY_USER}@${DEPLOY_HOST} << 'EOF'
+                            mkdir -p ${DEPLOY_DIR}
+                        EOF
+
+                        # 复制 docker-compose.yml
+                        scp -o StrictHostKeyChecking=no -i ${SSH_KEY} deploy/docker-compose.yml ${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_DIR}/
+
+                        # 设置环境变量并执行远程部署
+                        ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ${DEPLOY_USER}@${DEPLOY_HOST} << EOF
+                            export VERSION=${APP_VERSION}
+                            cd ${DEPLOY_DIR}
+                            bash -s < deploy/deploy.sh
+                        EOF
+                    '''
+                }
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                retry(3) {
+                    timeout(time: 1, unit: 'MINUTES') {
+                        waitForServer url: 'http://114.215.178.73:8085/mcp', timeout: 60
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            // 清理本地 Docker 镜像
+            sh 'docker image prune -f'
+            cleanWs()
+        }
+        success {
+            echo '部署成功！'
+            // 可添加通知，如钉钉、企业微信等
+        }
+        failure {
+            echo '部署失败，请检查日志'
+            // 可添加失败通知
+        }
+    }
+}

@@ -28,6 +28,6 @@ packages = ["src/mcp_weather_server"]
 mcp_weather_server = "mcp_weather_server:main"
 
 [project.urls]
-Source = "https://github.com/isdaniel/mcp_weather_server"
+Source = "https://github.com/lovexiao231-zzh/mcp_weather_server"
 
 
