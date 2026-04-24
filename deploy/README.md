@@ -97,6 +97,26 @@ docker run -d \
 
 访问 `http://your-server:8081` 完成初始化配置。
 
+### 3.1.1 配置 Docker 权限（重要）
+
+进入 Jenkins 容器，将 jenkins 用户加入 docker 组：
+
+```bash
+# 进入 Jenkins 容器
+docker exec -it jenkins bash
+
+# 获取 Docker 组 GID
+DOCKER_GID=$(stat -c '%g' /var/run/docker.sock)
+
+# 创建 docker 组并添加 jenkins 用户
+groupadd -g $DOCKER_GID docker 2>/dev/null || true
+usermod -aG docker jenkins
+
+# 重启 Jenkins 容器
+exit
+docker restart jenkins
+```
+
 ### 3.2 安装必要插件
 
 进入「系统管理」>「插件管理」，安装以下插件：

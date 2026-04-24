@@ -42,6 +42,14 @@ echo ""
 echo "等待 Jenkins 启动..."
 sleep 10
 
+# 配置 Docker 权限
+echo ""
+echo "[4/4] 配置 Docker 权限..."
+DOCKER_GID=$(stat -c '%g' /var/run/docker.sock 2>/dev/null || echo "999")
+docker exec jenkins bash -c "groupadd -g $DOCKER_GID docker 2>/dev/null; usermod -aG docker jenkins"
+docker restart jenkins
+sleep 5
+
 # 获取初始管理员密码
 echo ""
 echo "=== Jenkins 安装完成 ==="
