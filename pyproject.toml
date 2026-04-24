@@ -24,6 +24,9 @@ dependencies = [
 [tool.hatch.build.targets.wheel]
 packages = ["src/mcp_weather_server"]
 
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [project.scripts]
 mcp_weather_server = "mcp_weather_server:main"
 
