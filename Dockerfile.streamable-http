@@ -1,13 +1,14 @@
-FROM registry.cn-hangzhou.aliyuncs.com/library/python:3.10-slim
+FROM python:3.10-slim
 
-# Set the working directory
 WORKDIR /app
 
-# Copy the current directory contents into the container at /app
+# 安装 uv
+RUN pip install --no-cache-dir uv
+
 COPY . /app
 
-# Install dependencies and the package
-RUN (uv venv .venv) && (. .venv/bin/activate) && (uv pip install -e .)
+# 安装项目依赖
+RUN uv venv .venv && . .venv/bin/activate && uv pip install -e .
 
 ENV TRANSPORT=http
 ENV PORT=8085
