@@ -29,8 +29,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("${DOCKER_IMAGE}:${env.APP_VERSION}", "-f Dockerfile .")
-                    docker.build("${DOCKER_IMAGE}:latest", "-f Dockerfile .")
+                    docker.build("${DOCKER_IMAGE}:${env.APP_VERSION}", "-f Dockerfile.streamable-http .")
+                    docker.build("${DOCKER_IMAGE}:latest", "-f Dockerfile.streamable-http .")
                 }
             }
         }
@@ -58,20 +58,19 @@ pipeline {
                     variable: 'SSH_KEY'
                 )]) {
                     sh '''
-                        # 复制部署脚本到远程服务器
-                        ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ${DEPLOY_USER}@${DEPLOY_HOST} << 'EOF'
-                            mkdir -p ${DEPLOY_DIR}
-                        EOF
+                        # 创建远程部署目录
+                        ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ${DEPLOY_USER}@${DEPLOY_HOST} "mkdir -p ${DEPLOY_DIR}"
 
-                        # 复制 docker-compose.yml
+                        # 复制 docker-compose.yml 和部署脚本
                         scp -o StrictHostKeyChecking=no -i ${SSH_KEY} deploy/docker-compose.yml ${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_DIR}/
+                        scp -o StrictHostKeyChecking=no -i ${SSH_KEY} deploy/deploy.sh ${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_DIR}/
 
-                        # 设置环境变量并执行远程部署
-                        ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ${DEPLOY_USER}@${DEPLOY_HOST} << EOF
-                            export VERSION=${APP_VERSION}
-                            cd ${DEPLOY_DIR}
-                            bash -s < deploy/deploy.sh
-                        EOF
+                        # 执行远程部署
+                        ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ${DEPLOY_USER}@${DEPLOY_HOST} << REMOTE_EOF
+                            export VERSION='${APP_VERSION}'
+                            cd /opt/mcp-weather-server
+                            bash deploy.sh
+                        REMOTE_EOF
                     '''
                 }
             }
